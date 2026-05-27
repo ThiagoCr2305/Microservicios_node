@@ -1,4 +1,7 @@
 # microservicios-node
+SANTIAGO CONTRERAS RODRIGUEZ
+JUAN MANUEL PEREZ REYES
+WILBER DAVID LOAIZA TIQUE
 
 # Arquitectura de Microservicios
 
