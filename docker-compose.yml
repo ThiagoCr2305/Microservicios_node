@@ -1,0 +1,50 @@
+services:
+  usuarios-service:
+    build: ./usuarios-service
+    container_name: usuarios-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+
+  cursos-service:
+    build: ./cursos-service
+    container_name: cursos-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+
+  matriculas-service:
+    build: ./matriculas-service
+    container_name: matriculas-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+
+  profesores-service:
+    build: ./profesores-service
+    container_name: profesores-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+
+      USUARIOS_SERVICE: http://usuarios-service:3001
+      CURSOS_SERVICE: http://cursos-service:3002
+      MATRICULAS_SERVICE: http://matriculas-service:3003
+      PROFESORES_SERVICE: http://profesores-service:3004
+    depends_on:
+      - usuarios-service
+      - cursos-service
+      - matriculas-service
+      - profesores-service
