@@ -1,13 +1,26 @@
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 3003;
+const MONGO_URL = process.env.MONGO_URL || "mongodb://localhost:27017/matriculas";
 
 app.use(cors());
 app.use(express.json());
 
-let matriculas = [];
-let contadorId = 1;
+// Conexión a MongoDB
+mongoose.connect(MONGO_URL)
+  .then(() => console.log("Conectado a MongoDB - matriculas"))
+  .catch((err) => console.error("Error conectando a MongoDB:", err));
+
+// Esquema y modelo
+const matriculaSchema = new mongoose.Schema({
+  usuarioId: { type: String, required: true },
+  cursoId:   { type: String, required: true },
+  fecha:     { type: Date, default: Date.now }
+});
+
+const Matricula = mongoose.model("Matricula", matriculaSchema);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -15,35 +28,38 @@ app.get("/health", (req, res) => {
 });
 
 // Crear matrícula
-app.post("/matriculas", (req, res) => {
-  const { usuarioId, cursoId } = req.body;
-  if (!usuarioId || !cursoId) {
-    return res.status(400).json({
-      mensaje: "usuarioId y cursoId son obligatorios"
-    });
+app.post("/matriculas", async (req, res) => {
+  try {
+    const { usuarioId, cursoId } = req.body;
+    if (!usuarioId || !cursoId) {
+      return res.status(400).json({ mensaje: "usuarioId y cursoId son obligatorios" });
+    }
+    const nuevaMatricula = new Matricula({ usuarioId, cursoId });
+    await nuevaMatricula.save();
+    res.status(201).json(nuevaMatricula);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al crear matrícula", error: error.message });
   }
-  const nuevaMatricula = {
-    id: contadorId++,
-    usuarioId,
-    cursoId,
-    fecha: new Date().toISOString()
-  };
-  matriculas.push(nuevaMatricula);
-  res.status(201).json(nuevaMatricula);
 });
 
 // Listar todas las matrículas
-app.get("/matriculas", (req, res) => {
-  res.json(matriculas);
+app.get("/matriculas", async (req, res) => {
+  try {
+    const matriculas = await Matricula.find();
+    res.json(matriculas);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al consultar matrículas", error: error.message });
+  }
 });
 
 // Obtener matrículas por usuarioId
-app.get("/matriculas/usuario/:usuarioId", (req, res) => {
-  const usuarioId = Number(req.params.usuarioId);
-  const resultado = matriculas.filter(
-    (m) => Number(m.usuarioId) === usuarioId
-  );
-  res.json(resultado);
+app.get("/matriculas/usuario/:usuarioId", async (req, res) => {
+  try {
+    const matriculas = await Matricula.find({ usuarioId: req.params.usuarioId });
+    res.json(matriculas);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al consultar matrículas", error: error.message });
+  }
 });
 
 app.listen(PORT, () => {

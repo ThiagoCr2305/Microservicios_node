@@ -6,6 +6,9 @@ services:
       - "3001:3001"
     environment:
       PORT: 3001
+      MONGO_URL: mongodb://mongo-usuarios:27017/usuarios
+    depends_on:
+      - mongo-usuarios
 
   cursos-service:
     build: ./cursos-service
@@ -14,6 +17,9 @@ services:
       - "3002:3002"
     environment:
       PORT: 3002
+      MONGO_URL: mongodb://mongo-cursos:27017/cursos
+    depends_on:
+      - mongo-cursos
 
   matriculas-service:
     build: ./matriculas-service
@@ -22,6 +28,9 @@ services:
       - "3003:3003"
     environment:
       PORT: 3003
+      MONGO_URL: mongodb://mongo-matriculas:27017/matriculas
+    depends_on:
+      - mongo-matriculas
 
   profesores-service:
     build: ./profesores-service
@@ -30,6 +39,9 @@ services:
       - "3004:3004"
     environment:
       PORT: 3004
+      MONGO_URL: mongodb://mongo-profesores:27017/profesores
+    depends_on:
+      - mongo-profesores
 
   api-gateway:
     build: ./api-gateway
@@ -38,7 +50,6 @@ services:
       - "3000:3000"
     environment:
       PORT: 3000
-
       USUARIOS_SERVICE: http://usuarios-service:3001
       CURSOS_SERVICE: http://cursos-service:3002
       MATRICULAS_SERVICE: http://matriculas-service:3003
@@ -48,3 +59,41 @@ services:
       - cursos-service
       - matriculas-service
       - profesores-service
+
+  mongo-usuarios:
+    image: mongo:7
+    container_name: mongo-usuarios
+    ports:
+      - "27017:27017"
+    volumes:
+      - datos-usuarios:/data/db
+
+  mongo-cursos:
+    image: mongo:7
+    container_name: mongo-cursos
+    ports:
+      - "27018:27017"
+    volumes:
+      - datos-cursos:/data/db
+
+  mongo-matriculas:
+    image: mongo:7
+    container_name: mongo-matriculas
+    ports:
+      - "27019:27017"
+    volumes:
+      - datos-matriculas:/data/db
+
+  mongo-profesores:
+    image: mongo:7
+    container_name: mongo-profesores
+    ports:
+      - "27020:27017"
+    volumes:
+      - datos-profesores:/data/db
+
+volumes:
+  datos-usuarios:
+  datos-cursos:
+  datos-matriculas:
+  datos-profesores:

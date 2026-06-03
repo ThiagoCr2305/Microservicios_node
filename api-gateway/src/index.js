@@ -99,33 +99,36 @@ app.post("/api/matriculas", async (req, res) => {
 // ── Resumen ───────────────────────────────────────────────
 app.get("/api/resumen/matriculas", async (req, res) => {
   try {
-    const [usuariosRes, cursosRes, matriculasRes] = await Promise.all([
-      axios.get(`${USUARIOS_SERVICE}/usuarios`),
-      axios.get(`${CURSOS_SERVICE}/cursos`),
-      axios.get(`${MATRICULAS_SERVICE}/matriculas`)
-    ]);
-
-    const usuarios  = usuariosRes.data;
-    const cursos    = cursosRes.data;
+    const matriculasRes = await axios.get(`${MATRICULAS_SERVICE}/matriculas`);
     const matriculas = matriculasRes.data;
 
-    const resumen = matriculas.map((matricula) => {
-      const usuario = usuarios.find((u) => Number(u.id) === Number(matricula.usuarioId));
-      const curso   = cursos.find((c)   => Number(c.id) === Number(matricula.cursoId));
-      return {
-        idMatricula: matricula.id,
-        estudiante:  usuario ? usuario.nombre : "Usuario no encontrado",
-        curso:       curso   ? curso.nombre   : "Curso no encontrado",
-        fecha:       matricula.fecha
-      };
-    });
+    const resumen = await Promise.all(
+      matriculas.map(async (matricula) => {
+        try {
+          const usuarioRes = await axios.get(`${USUARIOS_SERVICE}/usuarios/${matricula.usuarioId}`);
+          const cursoRes   = await axios.get(`${CURSOS_SERVICE}/cursos/${matricula.cursoId}`);
+          return {
+            idMatricula: matricula._id,
+            estudiante:  usuarioRes.data.nombre,
+            curso:       cursoRes.data.nombre,
+            fecha:       matricula.fecha
+          };
+        } catch {
+          return {
+            idMatricula: matricula._id,
+            estudiante:  "Usuario no encontrado",
+            curso:       "Curso no encontrado",
+            fecha:       matricula.fecha
+          };
+        }
+      })
+    );
 
     res.json(resumen);
   } catch (error) {
-    res.status(500).json({ mensaje: "Error al generar resumen de matrículas", error: error.message });
+    res.status(500).json({ mensaje: "Error al generar resumen", error: error.message });
   }
 });
-
 // ── Profesores ────────────────────────────────────────────
 app.get("/api/profesores", async (req, res) => {
   try {
